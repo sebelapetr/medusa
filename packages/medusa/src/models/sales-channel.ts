@@ -8,6 +8,7 @@ import { SoftDeletableEntity } from "../interfaces"
 import { DbAwareColumn, generateEntityId } from "../utils"
 import { SalesChannelLocation } from "./sales-channel-location"
 import { Product } from "./product"
+import { Order } from "./order"
 
 @FeatureFlagEntity("sales_channels")
 export class SalesChannel extends SoftDeletableEntity {
@@ -38,6 +39,14 @@ export class SalesChannel extends SoftDeletableEntity {
     }),
   ])
   product: Product[]
+
+  @FeatureFlagDecorators("isolate_sales_channel_domain", [
+    OneToMany(
+      () => Order,
+      (order) => order.sales_channel
+    ),
+  ])
+  cart: Order[]
 
   @OneToMany(
     () => SalesChannelLocation,

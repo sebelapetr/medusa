@@ -115,6 +115,37 @@ export const SalesChannelRepository = dataSource
         .execute()
     },
 
+    async addOrders(salesChannelId: string, orderIds: string[]): Promise<void> {
+      const valuesToInsert = orderIds.map((id) => ({
+        id: generateEntityId(undefined, "ordersc"),
+        sales_channel_id: salesChannelId,
+        order_id: id,
+      }))
+
+      await this.createQueryBuilder()
+        .insert()
+        .into("order_sales_channel")
+        .values(valuesToInsert)
+        .orIgnore()
+        .execute()
+    },
+
+    async removeOrders(
+      salesChannelId: string,
+      orderIds: string[]
+    ): Promise<DeleteResult> {
+      const whereOptions = {
+        sales_channel_id: salesChannelId,
+        product_id: In(orderIds),
+      }
+
+      return await this.createQueryBuilder()
+        .delete()
+        .from("order_sales_channel")
+        .where(whereOptions)
+        .execute()
+    },
+
     async listProductIdsBySalesChannelIds(
       salesChannelIds: string | string[]
     ): Promise<{ [salesChannelId: string]: string[] }> {

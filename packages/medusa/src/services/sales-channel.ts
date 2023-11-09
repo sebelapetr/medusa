@@ -406,6 +406,68 @@ class SalesChannelService extends TransactionBaseService {
       return await this.retrieve(salesChannelId)
     })
   }
+
+  /**
+   * Add a batch of orders to a sales channel
+   * @param salesChannelId - The id of the sales channel on which to add the orders
+   * @param orderIds - The order ids to attach to the sales channel
+   * @return the sales channel on which the orders have been added
+   */
+  async addOrders(
+    salesChannelId: string,
+    orderIds: string[]
+  ): Promise<SalesChannel | never> {
+    return await this.atomicPhase_(async (transactionManager) => {
+      const salesChannelRepo = transactionManager.withRepository(
+        this.salesChannelRepository_
+      )
+
+      const isIsolatedSalesChannelDomainFlagOn =
+        this.featureFlagRouter_.isFeatureEnabled(IsolateSalesChannelDomain.key)
+
+      if (!isIsolatedSalesChannelDomainFlagOn) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_ALLOWED,
+          "Cannot use `addOrders` method if isolated sales channel module feature flag is not on"
+        )
+      }
+
+      await salesChannelRepo.addOrders(salesChannelId, orderIds)
+
+      return await this.retrieve(salesChannelId)
+    })
+  }
+
+  /**
+   * Remove orders from a sales channel in batch
+   * @param salesChannelId - The id of the sales channel from which orders are removed
+   * @param orderIds - The order ids to remove from the sales channel
+   * @return the sales channel on which the orders have been removed
+   */
+  async removeOrders(
+    salesChannelId: string,
+    orderIds: string[]
+  ): Promise<SalesChannel | never> {
+    return await this.atomicPhase_(async (transactionManager) => {
+      const salesChannelRepo = transactionManager.withRepository(
+        this.salesChannelRepository_
+      )
+
+      const isIsolatedSalesChannelDomainFlagOn =
+        this.featureFlagRouter_.isFeatureEnabled(IsolateSalesChannelDomain.key)
+
+      if (!isIsolatedSalesChannelDomainFlagOn) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_ALLOWED,
+          "Cannot use `removeOrders` method if isolated sales channel module feature flag is not on"
+        )
+      }
+
+      await salesChannelRepo.removeOrders(salesChannelId, orderIds)
+
+      return await this.retrieve(salesChannelId)
+    })
+  }
 }
 
 export default SalesChannelService
